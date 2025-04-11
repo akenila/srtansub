@@ -854,7 +854,7 @@ def main():
     
     # Settings tab
     tk.Label(settings_frame, text="Select Model:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-    model_var = ttk.Combobox(settings_frame, values=["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-2.0-flash-thinking-exp-01-21"])
+    model_var = ttk.Combobox(settings_frame, width=50, values=["gemini-2.0-flash", "gemini-2.0-flash-thinking", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-2.0-flash-thinking-exp-01-21"])
     model_var.grid(row=0, column=1, padx=5, pady=5)
     
     if custom_settings:
