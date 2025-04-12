@@ -346,8 +346,42 @@ def save_custom_settings(model_var, mapping_text, prompt_text):
     except Exception as e:
         messagebox.showerror("Error", f"Failed to save settings: {e}")
 
-def save_settings_to_file():
+def save_settings_to_file(videos_folder_entry=None, output_folder_entry=None, api_var=None, api_key_entry=None, profile_entry=None, model_var=None, mapping_text=None):
     try:
+        global custom_settings
+        
+        # Get existing settings or create new dict
+        if not custom_settings:
+            custom_settings = {}
+        
+        # Save all UI settings
+        if videos_folder_entry:
+            custom_settings["videos_folder"] = videos_folder_entry.get()
+        
+        if output_folder_entry:
+            custom_settings["output_folder"] = output_folder_entry.get()
+        
+        if api_var:
+            custom_settings["api_type"] = api_var.get()
+        
+        if api_key_entry:
+            custom_settings["api_key"] = api_key_entry.get()
+        
+        if profile_entry:
+            custom_settings["profile_path"] = profile_entry.get()
+        
+        if model_var:
+            custom_settings["model"] = model_var.get()
+        
+        if mapping_text:
+            mapping = {}
+            for line in mapping_text.get("1.0", tk.END).splitlines():
+                if ":" in line:
+                    key, value = line.split(":", 1)
+                    mapping[key.strip()] = value.strip()
+            custom_settings["mapping"] = mapping
+        
+        # Save to file
         with open("mapping_settings.json", "w", encoding="utf-8") as f:
             json.dump(custom_settings, f, ensure_ascii=False, indent=4)
         messagebox.showinfo("Success", "Settings saved to mapping_settings.json")
@@ -764,6 +798,41 @@ def process_videos_thread(video_folder, output_folder, status_label, api_key=Non
             tb = tb.tb_next
         open("error_log.txt", "a").write(error_message)
 # Main GUI
+
+
+def save_all_settings(videos_folder_entry, output_folder_entry, api_var, api_key_entry, profile_entry, model_var, mapping_text):
+    """Save all settings from all tabs at once"""
+    try:
+        global custom_settings
+        
+        # Get existing settings or create new dict
+        if not custom_settings:
+            custom_settings = {}
+        
+        # Save Extract & Translate tab settings
+        custom_settings["videos_folder"] = videos_folder_entry.get()
+        custom_settings["output_folder"] = output_folder_entry.get()
+        custom_settings["api_type"] = api_var.get()
+        custom_settings["api_key"] = api_key_entry.get()
+        custom_settings["profile_path"] = profile_entry.get()
+        
+        # Save Settings tab settings
+        custom_settings["model"] = model_var.get()
+        
+        # Process mapping text
+        mapping = {}
+        for line in mapping_text.get("1.0", tk.END).splitlines():
+            if ":" in line:
+                key, value = line.split(":", 1)
+                mapping[key.strip()] = value.strip()
+        custom_settings["mapping"] = mapping
+        
+        # Save to file
+        with open("mapping_settings.json", "w", encoding="utf-8") as f:
+            json.dump(custom_settings, f, ensure_ascii=False, indent=4)
+        messagebox.showinfo("Success", "All settings saved to mapping_settings.json")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to save settings: {e}")
 def main():
     root = tk.Tk()
     root.title("CapCut SRT Extractor & Translator")
@@ -809,6 +878,23 @@ def main():
     profile_entry = tk.Entry(extract_frame, width=50)
     profile_button = tk.Button(extract_frame, text="Browse", command=lambda: select_profile_file(profile_entry))
     
+    # Apply saved settings to UI fields
+    if custom_settings:
+        if "videos_folder" in custom_settings:
+            videos_folder_entry.insert(0, custom_settings["videos_folder"])
+        
+        if "output_folder" in custom_settings:
+            output_folder_entry.insert(0, custom_settings["output_folder"])
+        
+        if "api_type" in custom_settings:
+            api_var.set(custom_settings["api_type"])
+        
+        if "api_key" in custom_settings:
+            api_key_entry.insert(0, custom_settings["api_key"])
+        
+        if "profile_path" in custom_settings:
+            profile_entry.insert(0, custom_settings["profile_path"])
+    
     # Status label
     status_label = tk.Label(extract_frame, text="Ready")
     status_label.grid(row=6, column=0, columnspan=3, padx=5, pady=10, sticky="w")
@@ -835,6 +921,9 @@ def main():
     
     api_var.bind("<<ComboboxSelected>>", update_api_fields)
     
+    # Trigger the update based on loaded settings
+    update_api_fields(None)
+    
     # Process Videos Button
     extract_button = tk.Button(
         extract_frame, 
@@ -853,13 +942,21 @@ def main():
     )
     extract_button.grid(row=5, column=1, padx=5, pady=10)
     
+    # Save button for Extract tab
+    # save_extract_button.grid(row=5, column=2, padx=5, pady=10, sticky="e")  # Remove this line
+    # And remove the Save Settings button from the settings tab
+    
+    # Create a frame at the bottom for the unified save button
+    # Add the unified save button
+    
     # Settings tab
     tk.Label(settings_frame, text="Select Model:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
     model_var = ttk.Combobox(settings_frame, width=50, values=["gemini-2.0-flash", "gemini-2.0-flash-thinking", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-2.0-flash-thinking-exp-01-21"])
     model_var.grid(row=0, column=1, padx=5, pady=5)
     
     if custom_settings:
-        model_var.set(custom_settings.get("model", ""))
+        if "model" in custom_settings:
+            model_var.set(custom_settings.get("model", ""))
     
     # Custom mapping
     tk.Label(settings_frame, text="Custom Language Mapping:").grid(row=1, column=0, padx=5, pady=5, sticky="nw")
@@ -883,10 +980,23 @@ def main():
         tk.Label(example_frame, text=example).grid(row=i, column=0, padx=5, pady=2, sticky="w")
     
     # Save settings button
-    tk.Button(settings_frame, text="Save Settings", command=lambda: [save_custom_settings(model_var, mapping_text.get("1.0", tk.END), ""), save_settings_to_file()]).grid(row=4, column=1, padx=5, pady=10, sticky="e")
+    tk.Button(
+        settings_frame, 
+        text="Save All Settings", 
+        command=lambda: save_all_settings(
+            videos_folder_entry, 
+            output_folder_entry, 
+            api_var, 
+            api_key_entry, 
+            profile_entry,
+            model_var, 
+            mapping_text
+        ),
+        width=20,
+        height=2
+    ).grid(row=4, column=1, padx=5, pady=10, sticky="e")
     
     root.mainloop()
-
 if __name__ == "__main__":
     if not os.path.exists("Capcut_SRT"):
         os.makedirs("Capcut_SRT")
