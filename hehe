@@ -730,7 +730,7 @@ def process_videos_thread(video_folder, output_folder, status_label, api_key=Non
                         break
                 
                 # Create translated file path
-                translated_file = os.path.join(output_folder, f"{video_name} - {target_lang}.srt")
+                translated_file = os.path.join(output_folder, f"{video_name} - copy.srt")
                 
                 try:
                     # Translate with retry logic
