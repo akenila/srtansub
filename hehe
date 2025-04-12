@@ -717,6 +717,7 @@ def process_videos_thread(video_folder, output_folder, status_label, api_key=Non
             
             # Open original SRT in Subtitle Edit for manual editing first
             open_subtitle_edit(original_srt_file, status_label)
+            srt_content = open(original_srt_file, 'r', encoding='utf-8').read()
             
             # Translate if needed
             if api_type and api_type != "None":
