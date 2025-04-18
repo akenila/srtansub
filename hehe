@@ -423,7 +423,7 @@ def process_output_file(output_path, original_path=None, retry_count=0, max_retr
         # Create log file if it doesn't exist
         log_file = "translation_log.txt"
         if not os.path.exists(log_file):
-            with open(log_file, 'w', encoding='utf-8') as f:
+            with open(log_file, 'a', encoding='utf-8') as f:
                 f.write("Translation log started...\n\n")
         
         # Log processing start
@@ -552,7 +552,7 @@ def translate_file(api_key, srt_content, output_file, translate_status_label, pr
         base_name, ext = os.path.splitext(output_file)
         
         # Current attempt output file
-        current_output = output_file if retry_count == 0 else f"{base_name} {retry_count}{ext}"
+        current_output = output_file
         
         if retry_count > 0:
             if translate_status_label:
@@ -665,7 +665,6 @@ def translate_file(api_key, srt_content, output_file, translate_status_label, pr
         # Write translated content to file
         with open(current_output, "w", encoding="utf-8") as f:
             f.write(translated_text)
-
         # Process output file and check if retry is needed
         success, needs_retry, message, retry_reason = process_output_file(current_output, original_file, retry_count, max_retries)
         
@@ -951,7 +950,7 @@ def main():
     
     # Settings tab
     tk.Label(settings_frame, text="Select Model:").grid(row=0, column=0, padx=5, pady=5, sticky="w")
-    model_var = ttk.Combobox(settings_frame, width=50, values=["gemini-2.0-flash", "gemini-2.0-flash-thinking", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-2.0-flash-thinking-exp-01-21"])
+    model_var = ttk.Combobox(settings_frame, width=50, values=["gemini-2.5-pro","gemini-2.5-pro-preview-03-25","gemini-2.0-flash", "gemini-2.0-flash-thinking", "gemini-2.0-flash-lite", "gemini-1.5-flash", "gemini-2.0-flash-thinking-exp-01-21"])
     model_var.grid(row=0, column=1, padx=5, pady=5)
     
     if custom_settings:
